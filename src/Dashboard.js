@@ -8,7 +8,13 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieC
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
 export default function Dashboard() {
-  const [dbInfo, setDbInfo] = useState({ host: "localhost", user: "root", password: "", database: "" });
+  const [dbInfo, setDbInfo] = useState({
+    host: "localhost",
+    port: 3306,
+    user: "root",
+    password: "",
+    database: ""
+  });
   const [connected, setConnected] = useState(false);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
@@ -21,7 +27,7 @@ export default function Dashboard() {
 
   // --- Connect to database ---
   const connectDb = async () => {
-    if (!dbInfo.host || !dbInfo.user || !dbInfo.password || !dbInfo.database) {
+    if (!dbInfo.host || !dbInfo.user || !dbInfo.password || !dbInfo.database || !dbInfo.port) {
       setError("All database fields are required");
       return;
     }
@@ -74,17 +80,13 @@ export default function Dashboard() {
       if (Array.isArray(data.sql_result) && data.sql_result.length > 0) {
         setTableData(data.sql_result);
 
-        // --- Prepare chart data dynamically ---
         let chartArray = [];
         let xKey = "", yKey = "";
-
         const firstRow = data.sql_result[0];
 
-        // Identify string and numeric columns
         const stringCols = Object.keys(firstRow).filter(k => typeof firstRow[k] === "string");
         const numericCols = Object.keys(firstRow).filter(k => typeof firstRow[k] === "number");
 
-        // Strategy
         if (stringCols.length === 1 && numericCols.length === 1) {
           xKey = stringCols[0];
           yKey = numericCols[0];
@@ -111,7 +113,6 @@ export default function Dashboard() {
         setXAxisKey(xKey);
         setYAxisKey(yKey);
         setChartData(chartArray);
-
       } else {
         setTableData([]);
         setChartData([]);
@@ -132,6 +133,7 @@ export default function Dashboard() {
           {/* Database Input Fields */}
           <Box mt={3} display="flex" gap={2} flexWrap="wrap">
             <TextField label="Host" value={dbInfo.host} onChange={e => setDbInfo({ ...dbInfo, host: e.target.value })} />
+            <TextField label="Port" type="number" value={dbInfo.port} onChange={e => setDbInfo({ ...dbInfo, port: Number(e.target.value) })} />
             <TextField label="User" value={dbInfo.user} onChange={e => setDbInfo({ ...dbInfo, user: e.target.value })} />
             <TextField label="Password" type="password" value={dbInfo.password} onChange={e => setDbInfo({ ...dbInfo, password: e.target.value })} />
             <TextField label="Database" value={dbInfo.database} onChange={e => setDbInfo({ ...dbInfo, database: e.target.value })} />
