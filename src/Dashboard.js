@@ -216,33 +216,38 @@ export default function Dashboard() {
               </ResponsiveContainer>
 
               <Typography variant="h6" mt={2}>Pie Chart</Typography>
-<ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={300}>
   <PieChart>
     <Pie
       data={chartData}
       dataKey="value"
       nameKey="name"
       outerRadius={100}
-      label={({ name, value }) => `${name}: ${value}`}
+      label={({ name, value }) => `${name}: ${value}`} // shows country + value
     >
       {chartData.map((entry, i) => (
         <Cell key={i} fill={COLORS[i % COLORS.length]} />
       ))}
     </Pie>
+
     <Tooltip
-      formatter={(val) => [`${val}`, yAxisKey]}
-      labelFormatter={(label) => `${xAxisKey}: ${label}`}
+      formatter={(val, name, props) => [`${val}`, props.payload.name]} // show value + country
     />
+
     <Legend
+      layout="horizontal"
+      align="center"
+      verticalAlign="bottom"
       payload={chartData.map((item, index) => ({
-        value: `${item.name} (${item.value})`,
-        type: "square",
         id: item.name,
+        type: "square",
+        value: `${item.name} (${item.value})`, // Country + value in legend
         color: COLORS[index % COLORS.length],
       }))}
     />
   </PieChart>
 </ResponsiveContainer>
+
 
             </Box>
           )}
