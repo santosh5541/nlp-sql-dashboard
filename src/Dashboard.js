@@ -212,13 +212,13 @@ export default function Dashboard() {
               <Typography variant="h6">Bar Chart</Typography>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 50 }}> {/* Margin for rotated labels */}
+                  {/* FIX 1: Removed conflicting 'label' prop. Now only uses rotation and height for readability. */}
                   <XAxis 
                     dataKey="name" 
-                    label={{ value: xAxisKey, position: 'insideBottom', offset: 0 }} 
-                    angle={-45} // FIX 1: Rotate labels
-                    textAnchor="end" // Anchor text
-                    height={50} // Height for rotated labels
-                    interval={0} // Show all labels
+                    angle={-45} 
+                    textAnchor="end"
+                    height={50}
+                    interval={0}
                   />
                   <YAxis label={{ value: yAxisKey, angle: -90, position: 'insideLeft' }} />
                   <Tooltip formatter={(val) => [`${val}`, yAxisKey]} labelFormatter={(label) => `${xAxisKey}: ${label}`} />
@@ -226,6 +226,7 @@ export default function Dashboard() {
                   <Bar dataKey="value" fill="#1976d2" />
                 </BarChart>
               </ResponsiveContainer>
+              <Typography variant="caption" display="block" align="center" mt={-4}>{xAxisKey}</Typography> {/* Label for X-Axis, using MUI Typography */}
 
               <Typography variant="h6" mt={2}>Pie Chart</Typography>
               <ResponsiveContainer width="100%" height={300}>
@@ -237,8 +238,9 @@ export default function Dashboard() {
                     outerRadius={100}
                     label={({ name, value }) => `${name}: ${value}`}
                   >
+                    {/* FIX 2: Uses PIE_COLORS for unique colors */}
                     {chartData.map((entry, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} /> {/* FIX 2: Use PIE_COLORS for unique colors */}
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                     ))}
                   </Pie>
 
