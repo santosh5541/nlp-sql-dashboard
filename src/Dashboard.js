@@ -88,27 +88,34 @@ export default function Dashboard() {
         const stringCols = Object.keys(firstRow).filter(k => typeof firstRow[k] === "string");
         const numericCols = Object.keys(firstRow).filter(k => typeof firstRow[k] === "number");
 
-        // Prioritize meaningful column names
-        if (stringCols.length > 0 && numericCols.length > 0) {
-          // Use first string column as x-axis and first numeric column as y-axis
-          xKey = stringCols[0];
-          yKey = numericCols[0];
-          chartArray = data.sql_result.map(row => ({ name: row[xKey], value: row[yKey] }));
-        } else if (stringCols.length > 0) {
-          // Use first string column as x-axis and count occurrences for y-axis
-          xKey = stringCols[0];
-          yKey = "Count";
-          const counts = {};
-          data.sql_result.forEach(row => {
-            const key = row[xKey];
-            counts[key] = (counts[key] || 0) + 1;
-          });
-          chartArray = Object.keys(counts).map(k => ({ name: k, value: counts[k] }));
-        } else if (numericCols.length > 0) {
-          // Use first numeric column as y-axis and second numeric column (or index) as x-axis
-          xKey = numericCols.length > 1 ? numericCols[1] : numericCols[0];
-          yKey = numericCols[0];
-          chartArray = data.sql_result.map(row => ({ name: row[xKey].toString(), value: row[yKey] }));
+        // Prioritize meaningful column names with logical labels
+        if (stringCols.length > 0) {
+          // Use first string column as x-axis (e.g., Album, Category)
+          xKey = stringCols[0]; // e.g., "Album"
+          if (numericCols.length > 0) {
+            // Use first numeric column as y-axis with a logical term
+            yKey = `${numericCols[0]} Value`; // e.g., "Sales Value"
+            chartArray = data.sql_result.map(row => ({ name: row[xKey], value: row[numericCols[0]] }));
+          } else {
+            // Use count as y-axis if no numeric data
+            yKey = "Count";
+            const counts = {};
+            data.sql_result.forEach(row => {
+              const key = row[xKey];
+              counts[key] = (counts[key] || 0) + 1;
+            });
+            chartArray = Object.keys(counts).map(k => ({ name: k, value: counts[k] }));
+          }
+        } else if (numericCols.length > 1) {
+          // Use first numeric column as x-axis category and second as y-axis
+          xKey = `${numericCols[0]} Category`; // e.g., "ID Category"
+          yKey = `${numericCols[1]} Value`; // e.g., "Revenue Value"
+          chartArray = data.sql_result.map(row => ({ name: row[numericCols[0]].toString(), value: row[numericCols[1]] }));
+        } else if (numericCols.length === 1) {
+          // Use single numeric column as y-axis and index as x-axis category
+          xKey = "Record";
+          yKey = `${numericCols[0]} Value`; // e.g., "Score Value"
+          chartArray = data.sql_result.map((row, i) => ({ name: `Record ${i + 1}`, value: row[numericCols[0]] }));
         } else {
           // Fallback: Use first column as x-axis and count for y-axis
           const firstCol = Object.keys(firstRow)[0];
