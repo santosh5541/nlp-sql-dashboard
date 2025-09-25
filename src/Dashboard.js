@@ -60,7 +60,7 @@ export default function Dashboard() {
     } finally { setLoading(false); }
   };
 
-  // --- Ask NLP question ---
+  // --- Ask NLP question - REWRITTEN FOR LOGICAL AXIS LABELS ---
   const handleQuery = async () => {
     if (!question.trim()) { setError("Enter a question"); return; }
     if (!connected) { setError("Connect to a database first"); return; }
@@ -84,20 +84,25 @@ export default function Dashboard() {
         let xKey = "", yKey = "";
         const firstRow = data.sql_result[0];
 
-        // Identify string and numeric columns
-        const stringCols = Object.keys(firstRow).filter(k => typeof firstRow[k] === "string");
-        const numericCols = Object.keys(firstRow).filter(k => typeof firstRow[k] === "number");
+        // Identify column types
+        const allCols = Object.keys(firstRow);
+        const stringCols = allCols.filter(k => typeof firstRow[k] === "string");
+        const numericCols = allCols.filter(k => typeof firstRow[k] === "number");
 
-        // Prioritize meaningful column names with logical labels
+        // --- Logic for Logical X/Y Axis Labels ---
         if (stringCols.length > 0) {
-          // Use first string column as x-axis (e.g., Album, Category)
-          xKey = stringCols[0]; // e.g., "Album"
+          // SCENARIO 1: String Column exists (most common for categorization)
+          
+          // X-Axis: Use the first string column (it's the natural category)
+          xKey = stringCols[0]; 
+          
           if (numericCols.length > 0) {
-            // Use first numeric column as y-axis with a logical term
-            yKey = `${numericCols[0]} Value`; // e.g., "Sales Value"
-            chartArray = data.sql_result.map(row => ({ name: row[xKey], value: row[numericCols[0]] }));
+            // Y-Axis: Use the first numeric column and append ' Value' for clarity
+            const yCol = numericCols[0];
+            yKey = `${yCol} Value`; 
+            chartArray = data.sql_result.map(row => ({ name: row[xKey], value: row[yCol] }));
           } else {
-            // Use count as y-axis if no numeric data
+            // Y-Axis: If no numeric columns, use Count
             yKey = "Count";
             const counts = {};
             data.sql_result.forEach(row => {
@@ -106,27 +111,36 @@ export default function Dashboard() {
             });
             chartArray = Object.keys(counts).map(k => ({ name: k, value: counts[k] }));
           }
-        } else if (numericCols.length > 1) {
-          // Use first numeric column as x-axis category and second as y-axis
-          xKey = `${numericCols[0]} Category`; // e.g., "ID Category"
-          yKey = `${numericCols[1]} Value`; // e.g., "Revenue Value"
-          chartArray = data.sql_result.map(row => ({ name: row[numericCols[0]].toString(), value: row[numericCols[1]] }));
+        } else if (numericCols.length >= 2) {
+          // SCENARIO 2: Two or more Numeric Columns (e.g., ReturnOnInvestment, AlbumId)
+          
+          // X-Axis: Use the first numeric column and append ' Category'
+          const xCol = numericCols[0];
+          xKey = `${xCol} Category`;
+          
+          // Y-Axis: Use the second numeric column and append ' Value'
+          const yCol = numericCols[1];
+          yKey = `${yCol} Value`;
+          
+          // Use the numeric value converted to string for the category name
+          chartArray = data.sql_result.map(row => ({ name: row[xCol].toString(), value: row[yCol] }));
         } else if (numericCols.length === 1) {
-          // Use single numeric column as y-axis and index as x-axis category
-          xKey = "Record";
-          yKey = `${numericCols[0]} Value`; // e.g., "Score Value"
-          chartArray = data.sql_result.map((row, i) => ({ name: `Record ${i + 1}`, value: row[numericCols[0]] }));
+          // SCENARIO 3: Single Numeric Column
+          
+          // X-Axis: Use a simple indexed label
+          xKey = "Record Index";
+          
+          // Y-Axis: Use the numeric column and append ' Value'
+          const yCol = numericCols[0];
+          yKey = `${yCol} Value`; 
+          
+          // Use an interpolated string for the category name (Record 1, Record 2, etc.)
+          chartArray = data.sql_result.map((row, i) => ({ name: `Record ${i + 1}`, value: row[yCol] }));
         } else {
-          // Fallback: Use first column as x-axis and count for y-axis
-          const firstCol = Object.keys(firstRow)[0];
-          xKey = firstCol;
+          // SCENARIO 4: Fallback
+          xKey = allCols[0] || "Unknown Category";
           yKey = "Count";
-          const counts = {};
-          data.sql_result.forEach(row => {
-            const key = row[xKey];
-            counts[key] = (counts[key] || 0) + 1;
-          });
-          chartArray = Object.keys(counts).map(k => ({ name: k, value: counts[k] }));
+          chartArray = data.sql_result.map((row, i) => ({ name: row[xKey]?.toString() || `Item ${i + 1}`, value: 1 }));
         }
 
         setXAxisKey(xKey);
