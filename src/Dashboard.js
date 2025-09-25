@@ -216,15 +216,34 @@ export default function Dashboard() {
               </ResponsiveContainer>
 
               <Typography variant="h6" mt={2}>Pie Chart</Typography>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie data={chartData} dataKey="value" nameKey="name" outerRadius={80} label>
-                    {chartData.map((entry, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip formatter={(val, name) => [`${val}`, yAxisKey]} labelFormatter={(label) => `${xAxisKey}: ${label}`} />
-                  <Legend formatter={() => yAxisKey} />
-                </PieChart>
-              </ResponsiveContainer>
+<ResponsiveContainer width="100%" height={300}>
+  <PieChart>
+    <Pie
+      data={chartData}
+      dataKey="value"
+      nameKey="name"
+      outerRadius={100}
+      label={({ name, value }) => `${name}: ${value}`}
+    >
+      {chartData.map((entry, i) => (
+        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+      ))}
+    </Pie>
+    <Tooltip
+      formatter={(val) => [`${val}`, yAxisKey]}
+      labelFormatter={(label) => `${xAxisKey}: ${label}`}
+    />
+    <Legend
+      payload={chartData.map((item, index) => ({
+        value: `${item.name} (${item.value})`,
+        type: "square",
+        id: item.name,
+        color: COLORS[index % COLORS.length],
+      }))}
+    />
+  </PieChart>
+</ResponsiveContainer>
+
             </Box>
           )}
         </CardContent>
