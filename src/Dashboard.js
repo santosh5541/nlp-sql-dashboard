@@ -5,7 +5,12 @@ import {
 } from "@mui/material";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from "recharts";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+// FIX 2: A longer array of distinct colors for the Pie Chart to prevent repetition
+const PIE_COLORS = [
+  "#0088FE", "#00C49F", "#FFBB28", "#FF8042",
+  "#A26EBB", "#E67F00", "#7B68EE", "#20B2AA", 
+  "#3CB371", "#B8860B", "#DC143C", "#5F9EA0"
+];
 
 export default function Dashboard() {
   const [dbInfo, setDbInfo] = useState({
@@ -206,8 +211,15 @@ export default function Dashboard() {
             <Box mt={3}>
               <Typography variant="h6">Bar Chart</Typography>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData}>
-                  <XAxis dataKey="name" label={{ value: xAxisKey, position: 'insideBottom', offset: -5 }} />
+                <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 50 }}> {/* Margin for rotated labels */}
+                  <XAxis 
+                    dataKey="name" 
+                    label={{ value: xAxisKey, position: 'insideBottom', offset: 0 }} 
+                    angle={-45} // FIX 1: Rotate labels
+                    textAnchor="end" // Anchor text
+                    height={50} // Height for rotated labels
+                    interval={0} // Show all labels
+                  />
                   <YAxis label={{ value: yAxisKey, angle: -90, position: 'insideLeft' }} />
                   <Tooltip formatter={(val) => [`${val}`, yAxisKey]} labelFormatter={(label) => `${xAxisKey}: ${label}`} />
                   <Legend formatter={() => yAxisKey} />
@@ -216,32 +228,32 @@ export default function Dashboard() {
               </ResponsiveContainer>
 
               <Typography variant="h6" mt={2}>Pie Chart</Typography>
-<ResponsiveContainer width="100%" height={300}>
-  <PieChart>
-    <Pie
-      data={chartData}
-      dataKey="value"
-      nameKey="name"
-      outerRadius={100}
-      label={({ name, value }) => `${name}: ${value}`} // <-- show both
-    >
-      {chartData.map((entry, i) => (
-        <Cell key={i} fill={COLORS[i % COLORS.length]} />
-      ))}
-    </Pie>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={100}
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {chartData.map((entry, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} /> {/* FIX 2: Use PIE_COLORS for unique colors */}
+                    ))}
+                  </Pie>
 
-    {/* Tooltip with descriptive labels */}
-    <Tooltip
-      formatter={(val) => [`${val}`, yAxisKey]} // value + y-axis label
-      labelFormatter={(label) => `${xAxisKey}: ${label}`}
-    />
+                  {/* Tooltip with descriptive labels */}
+                  <Tooltip
+                    formatter={(val) => [`${val}`, yAxisKey]}
+                    labelFormatter={(label) => `${xAxisKey}: ${label}`}
+                  />
 
-    {/* Legend showing artist names */}
-    <Legend
-      formatter={(value, entry) => `${entry.payload.name} (${entry.payload.value})`}
-    />
-  </PieChart>
-</ResponsiveContainer>
+                  {/* Legend showing artist names */}
+                  <Legend
+                    formatter={(value, entry) => `${entry.payload.name} (${entry.payload.value})`}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
             </Box>
           )}
         </CardContent>
