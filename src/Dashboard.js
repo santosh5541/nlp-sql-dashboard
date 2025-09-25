@@ -91,19 +91,14 @@ export default function Dashboard() {
 
         // --- Logic for Logical X/Y Axis Labels ---
         if (stringCols.length > 0) {
-          // SCENARIO 1: String Column exists (e.g., Album Name, City)
-          
-          // X-Axis: Use the first string column (natural category)
+          // SCENARIO 1: String Column exists (e.g., Album, City)
           xKey = stringCols[0]; 
-          
           if (numericCols.length > 0) {
-            // Y-Axis: Use the first numeric column and append ' Value' for clarity
             const yCol = numericCols[0];
-            yKey = `${yCol} Value`; 
+            yKey = `${yCol} (Value)`; 
             chartArray = data.sql_result.map(row => ({ name: row[xKey], value: row[yCol] }));
           } else {
-            // Y-Axis: If no numeric columns, use Count
-            yKey = "Count of Records"; // More descriptive than just 'Count'
+            yKey = "Count of Records";
             const counts = {};
             data.sql_result.forEach(row => {
               const key = row[xKey];
@@ -112,35 +107,24 @@ export default function Dashboard() {
             chartArray = Object.keys(counts).map(k => ({ name: k, value: counts[k] }));
           }
         } else if (numericCols.length >= 2) {
-          // SCENARIO 2: Two or more Numeric Columns (e.g., ID, Sales)
-          
-          // X-Axis: Use the first numeric column and append ' Category'
+          // SCENARIO 2: Two or more numeric columns
           const xCol = numericCols[0];
-          xKey = `${xCol} Category`;
-          
-          // Y-Axis: Use the second numeric column and append ' Value'
           const yCol = numericCols[1];
-          yKey = `${yCol} Value`;
-          
-          // Use the numeric value converted to string for the category name
+          xKey = `${xCol} (Category)`; 
+          yKey = `${yCol} (Value)`;
           chartArray = data.sql_result.map(row => ({ name: row[xCol].toString(), value: row[yCol] }));
         } else if (numericCols.length === 1) {
-          // SCENARIO 3: Single Numeric Column
-          
-          // X-Axis: Use a simple indexed label
-          xKey = "Record Index";
-          
-          // Y-Axis: Use the numeric column and append ' Value'
+          // SCENARIO 3: One numeric column
           const yCol = numericCols[0];
-          yKey = `${yCol} Value`; 
-          
-          // Use an interpolated string for the category name (Record 1, Record 2, etc.)
+          xKey = "Record Index";
+          yKey = `${yCol} (Value)`; 
           chartArray = data.sql_result.map((row, i) => ({ name: `Record ${i + 1}`, value: row[yCol] }));
         } else {
-          // SCENARIO 4: Fallback (All columns are complex/date, or empty)
-          xKey = allCols[0] || "Unknown Category";
+          // SCENARIO 4: Fallback
+          const firstCol = allCols[0] || "Unknown";
+          xKey = `${firstCol} (Category)`;
           yKey = "Record Count";
-          chartArray = data.sql_result.map((row, i) => ({ name: row[xKey]?.toString() || `Item ${i + 1}`, value: 1 }));
+          chartArray = data.sql_result.map((row, i) => ({ name: row[firstCol]?.toString() || `Item ${i + 1}`, value: 1 }));
         }
 
         setXAxisKey(xKey);
@@ -225,8 +209,8 @@ export default function Dashboard() {
                 <BarChart data={chartData}>
                   <XAxis dataKey="name" label={{ value: xAxisKey, position: 'insideBottom', offset: -5 }} />
                   <YAxis label={{ value: yAxisKey, angle: -90, position: 'insideLeft' }} />
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip formatter={(val) => [`${val}`, yAxisKey]} labelFormatter={(label) => `${xAxisKey}: ${label}`} />
+                  <Legend formatter={() => yAxisKey} />
                   <Bar dataKey="value" fill="#1976d2" />
                 </BarChart>
               </ResponsiveContainer>
@@ -237,8 +221,8 @@ export default function Dashboard() {
                   <Pie data={chartData} dataKey="value" nameKey="name" outerRadius={80} label>
                     {chartData.map((entry, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip formatter={(val, name) => [`${val}`, yAxisKey]} labelFormatter={(label) => `${xAxisKey}: ${label}`} />
+                  <Legend formatter={() => yAxisKey} />
                 </PieChart>
               </ResponsiveContainer>
             </Box>
