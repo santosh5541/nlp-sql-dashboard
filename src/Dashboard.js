@@ -84,14 +84,18 @@ export default function Dashboard() {
         let xKey = "", yKey = "";
         const firstRow = data.sql_result[0];
 
+        // Identify string and numeric columns
         const stringCols = Object.keys(firstRow).filter(k => typeof firstRow[k] === "string");
         const numericCols = Object.keys(firstRow).filter(k => typeof firstRow[k] === "number");
 
-        if (stringCols.length === 1 && numericCols.length === 1) {
+        // Prioritize meaningful column names
+        if (stringCols.length > 0 && numericCols.length > 0) {
+          // Use first string column as x-axis and first numeric column as y-axis
           xKey = stringCols[0];
           yKey = numericCols[0];
           chartArray = data.sql_result.map(row => ({ name: row[xKey], value: row[yKey] }));
-        } else if (stringCols.length === 1) {
+        } else if (stringCols.length > 0) {
+          // Use first string column as x-axis and count occurrences for y-axis
           xKey = stringCols[0];
           yKey = "Count";
           const counts = {};
@@ -101,13 +105,21 @@ export default function Dashboard() {
           });
           chartArray = Object.keys(counts).map(k => ({ name: k, value: counts[k] }));
         } else if (numericCols.length > 0) {
-          xKey = "Index";
+          // Use first numeric column as y-axis and second numeric column (or index) as x-axis
+          xKey = numericCols.length > 1 ? numericCols[1] : numericCols[0];
           yKey = numericCols[0];
-          chartArray = data.sql_result.map((row, i) => ({ name: `Row ${i + 1}`, value: row[yKey] }));
+          chartArray = data.sql_result.map(row => ({ name: row[xKey].toString(), value: row[yKey] }));
         } else {
-          xKey = "Index";
+          // Fallback: Use first column as x-axis and count for y-axis
+          const firstCol = Object.keys(firstRow)[0];
+          xKey = firstCol;
           yKey = "Count";
-          chartArray = data.sql_result.map((row, i) => ({ name: `Row ${i + 1}`, value: 1 }));
+          const counts = {};
+          data.sql_result.forEach(row => {
+            const key = row[xKey];
+            counts[key] = (counts[key] || 0) + 1;
+          });
+          chartArray = Object.keys(counts).map(k => ({ name: k, value: counts[k] }));
         }
 
         setXAxisKey(xKey);
