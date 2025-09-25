@@ -60,7 +60,7 @@ export default function Dashboard() {
     } finally { setLoading(false); }
   };
 
-  // --- Ask NLP question - REWRITTEN FOR LOGICAL AXIS LABELS ---
+  // --- Ask NLP question - REVISED FOR LOGICAL AXIS LABELS ---
   const handleQuery = async () => {
     if (!question.trim()) { setError("Enter a question"); return; }
     if (!connected) { setError("Connect to a database first"); return; }
@@ -91,9 +91,9 @@ export default function Dashboard() {
 
         // --- Logic for Logical X/Y Axis Labels ---
         if (stringCols.length > 0) {
-          // SCENARIO 1: String Column exists (most common for categorization)
+          // SCENARIO 1: String Column exists (e.g., Album Name, City)
           
-          // X-Axis: Use the first string column (it's the natural category)
+          // X-Axis: Use the first string column (natural category)
           xKey = stringCols[0]; 
           
           if (numericCols.length > 0) {
@@ -103,7 +103,7 @@ export default function Dashboard() {
             chartArray = data.sql_result.map(row => ({ name: row[xKey], value: row[yCol] }));
           } else {
             // Y-Axis: If no numeric columns, use Count
-            yKey = "Count";
+            yKey = "Count of Records"; // More descriptive than just 'Count'
             const counts = {};
             data.sql_result.forEach(row => {
               const key = row[xKey];
@@ -112,7 +112,7 @@ export default function Dashboard() {
             chartArray = Object.keys(counts).map(k => ({ name: k, value: counts[k] }));
           }
         } else if (numericCols.length >= 2) {
-          // SCENARIO 2: Two or more Numeric Columns (e.g., ReturnOnInvestment, AlbumId)
+          // SCENARIO 2: Two or more Numeric Columns (e.g., ID, Sales)
           
           // X-Axis: Use the first numeric column and append ' Category'
           const xCol = numericCols[0];
@@ -137,9 +137,9 @@ export default function Dashboard() {
           // Use an interpolated string for the category name (Record 1, Record 2, etc.)
           chartArray = data.sql_result.map((row, i) => ({ name: `Record ${i + 1}`, value: row[yCol] }));
         } else {
-          // SCENARIO 4: Fallback
+          // SCENARIO 4: Fallback (All columns are complex/date, or empty)
           xKey = allCols[0] || "Unknown Category";
-          yKey = "Count";
+          yKey = "Record Count";
           chartArray = data.sql_result.map((row, i) => ({ name: row[xKey]?.toString() || `Item ${i + 1}`, value: 1 }));
         }
 
